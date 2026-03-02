@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JPC Daily Project Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --cream: #ede8d9;
+    --gold: #c9a84c;
+    --steel: #4a5568;
+    --muted: #8a8fa8;
+    --line: #d4cfc0;
+    --red: #c0392b;
+    --green: #2d6a4f;
+    --blue: #2c5f8a;
+    --purple: #7b5ea7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 32px 24px 80px;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,170,150,0.15) 28px);
+    pointer-events: none; z-index: 0;
+  }
+  .wrapper { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; }
+
+  /* HEADER */
+  .header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 3px double var(--ink); padding-bottom: 16px; margin-bottom: 24px;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .header-left h1 { font-family: 'DM Serif Display', serif; font-size: 2rem; letter-spacing: -0.02em; line-height: 1; }
+  .header-left p { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .date-box { display: flex; flex-direction: column; align-items: flex-end; }
+  .date-box label { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .date-box input[type="date"] {
+    font-family: 'DM Mono', monospace; font-size: 0.85rem;
+    background: transparent; border: none; border-bottom: 1px solid var(--line);
+    color: var(--ink); padding: 2px 4px; cursor: pointer; outline: none;
+  }
+  .btn {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 7px 14px; border: 1.5px solid var(--ink);
+    background: transparent; color: var(--ink); cursor: pointer; transition: all 0.15s;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn-gold { border-color: var(--gold); color: #8a6820; }
+  .btn-gold:hover { background: var(--gold); color: white; }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px;
+    padding: 10px 14px; background: var(--cream); border: 1px solid var(--line);
+    border-left: 3px solid var(--gold); align-items: center;
+  }
+  .summary-bar-label { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+  .summary-chip {
+    font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border: 1px solid var(--line); background: white;
+    color: var(--steel); cursor: pointer; transition: all 0.12s;
+  }
+  .summary-chip:hover { border-color: var(--gold); }
+  .summary-chip.has-items { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* TABS */
+  .channel-nav { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; }
+  .tab {
+    font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 6px 10px; border: 1.5px solid var(--line);
+    background: var(--cream); color: var(--steel); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .tab:hover { border-color: var(--gold); color: var(--ink); }
+  .tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .tab.tab-master { border-color: var(--gold); color: #8a6820; background: #fffbf0; font-weight: 500; }
+  .tab.tab-master.active { background: var(--gold); color: white; border-color: var(--gold); }
+  .tab.tab-hr { border-color: var(--purple); color: var(--purple); background: #f8f0ff; }
+  .tab.tab-hr.active { background: var(--purple); color: white; border-color: var(--purple); }
+
+  /* PANELS */
+  .channel-panel { display: none; }
+  .channel-panel.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+  }
+  .channel-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--ink); }
+  .channel-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .meta-pill {
+    font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border: 1px solid var(--line); color: var(--steel); background: var(--cream);
+  }
+  .meta-pill.pm { background: #e8f0f8; border-color: #b0c4de; color: var(--blue); }
+  .meta-pill.ed { background: #f8f0e8; border-color: #dec4b0; color: #7a4a20; }
+  .meta-pill.gd { background: #f0f8f0; border-color: #b0deb0; color: var(--green); }
+
+  .status-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .status-label { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .status-select {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; border: 1.5px solid var(--line);
+    background: var(--cream); color: var(--ink); padding: 4px 8px; outline: none; cursor: pointer;
+  }
+  .priority-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .priority-btn {
+    font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px;
+    border: 1.5px solid var(--line); background: transparent; cursor: pointer;
+    font-family: 'DM Mono', monospace; transition: all 0.12s; color: var(--steel);
+  }
+  .priority-btn.sel-high { background: #ffeaea; border-color: var(--red); color: var(--red); }
+  .priority-btn.sel-med  { background: #fff8e0; border-color: var(--gold); color: #8a6820; }
+  .priority-btn.sel-low  { background: #eafaf0; border-color: var(--green); color: var(--green); }
+
+  /* NOTE BLOCKS */
+  .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 600px) { .notes-grid { grid-template-columns: 1fr; } }
+  .note-block { border: 1.5px solid var(--line); background: white; padding: 14px 16px; position: relative; }
+  .note-block::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  .note-block.acc-red::before    { background: var(--red); }
+  .note-block.acc-green::before  { background: var(--green); }
+  .note-block.acc-blue::before   { background: var(--blue); }
+  .note-block.acc-purple::before { background: var(--purple); }
+
+  .note-label {
+    font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .note-label .lbl-icon { font-size: 0.8rem; }
+
+  /* CHECKLIST */
+  .checklist { list-style: none; }
+  .checklist-item {
+    display: flex; align-items: flex-start; gap: 8px; padding: 4px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item input[type="checkbox"] {
+    margin-top: 4px; width: 13px; height: 13px; flex-shrink: 0;
+    accent-color: var(--ink); cursor: pointer;
+  }
+  .item-text {
+    font-family: 'DM Mono', monospace; font-size: 0.77rem; line-height: 1.5;
+    color: var(--ink); background: transparent; border: none; outline: none;
+    flex: 1; resize: none; overflow: hidden; padding: 0; min-height: 22px;
+  }
+  .item-text::placeholder { color: #ccc; }
+  .checklist-item.is-done .item-text { text-decoration: line-through; color: var(--muted); }
+  .del-item-btn {
+    background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.75rem;
+    padding: 0 2px; margin-top: 4px; flex-shrink: 0; transition: color 0.12s; line-height: 1;
+  }
+  .del-item-btn:hover { color: var(--red); }
+  .add-item-row {
+    padding-top: 6px; display: flex;
+  }
+  .add-item-btn {
+    font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; background: none; border: none; color: var(--muted);
+    cursor: pointer; display: flex; align-items: center; gap: 4px; transition: color 0.12s; padding: 0;
+  }
+  .add-item-btn:hover { color: var(--gold); }
+
+  /* EOD textarea */
+  .note-block textarea {
+    width: 100%; min-height: 68px; font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    line-height: 1.7; color: var(--ink); background: transparent; border: none; resize: vertical; outline: none;
+  }
+  .note-block textarea::placeholder { color: #ccc; }
+  .section-divider { border: none; border-top: 1px dashed var(--line); margin: 18px 0; }
+
+  /* MASTER TODO */
+  .master-progress {
+    padding: 14px 18px; background: white; border: 1.5px solid var(--line); margin-bottom: 20px;
+  }
+  .progress-label {
+    display: flex; justify-content: space-between; margin-bottom: 8px;
+    font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--steel);
+  }
+  .progress-bar-wrap { height: 6px; background: var(--cream); border: 1px solid var(--line); }
+  .progress-bar-fill { height: 100%; background: var(--green); transition: width 0.4s; width: 0%; }
+
+  .master-section { margin-bottom: 20px; }
+  .master-section-hdr {
+    display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+    background: var(--cream); border: 1.5px solid var(--line);
+    border-left: 4px solid var(--gold); margin-bottom: 0;
+  }
+  .master-section-hdr.acc-blue   { border-left-color: var(--blue); }
+  .master-section-hdr.acc-green  { border-left-color: var(--green); }
+  .master-section-hdr.acc-red    { border-left-color: var(--red); }
+  .master-section-hdr.acc-purple { border-left-color: var(--purple); }
+  .master-section-name { font-family: 'DM Serif Display', serif; font-size: 1rem; flex: 1; }
+  .master-section-sub  { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .master-section-ct   { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .master-section-ct .ct-done { color: var(--green); }
+  .master-items-wrap { }
+  .master-row {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 14px;
+    background: white; border: 1px solid var(--line); border-top: none;
+  }
+  .master-row:hover { background: #fafaf5; }
+  .master-row input[type="checkbox"] { margin-top: 3px; width: 13px; height: 13px; flex-shrink: 0; accent-color: var(--ink); cursor: pointer; }
+  .master-row-body { flex: 1; min-width: 0; }
+  .master-row-text { font-size: 0.78rem; line-height: 1.5; color: var(--ink); word-break: break-word; }
+  .master-row-text.is-done { text-decoration: line-through; color: var(--muted); }
+  .master-row-src { font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+  .master-prio-badge {
+    font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 6px; border: 1px solid; flex-shrink: 0; margin-top: 3px;
+  }
+  .master-prio-badge.high { color: var(--red);   border-color: var(--red);   background: #ffeaea; }
+  .master-prio-badge.med  { color: #8a6820;       border-color: var(--gold);  background: #fff8e0; }
+  .master-prio-badge.low  { color: var(--green);  border-color: var(--green); background: #eafaf0; }
+  .master-empty {
+    padding: 12px 14px; background: white; border: 1px solid var(--line); border-top: none;
+    font-size: 0.7rem; color: var(--muted); font-style: italic;
+  }
+  .refresh-btn {
+    font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em;
+    text-transform: uppercase; background: none; border: 1.5px solid var(--line);
+    color: var(--muted); cursor: pointer; padding: 5px 12px; transition: all 0.12s; margin-bottom: 16px;
+  }
+  .refresh-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--paper);
+    font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 18px;
+    opacity: 0; transform: translateY(8px); transition: all 0.2s; z-index: 999; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>JPC Daily Notes</h1>
+      <p>Client Delivery Pod Workflow Tracker</p>
+    </div>
+    <div class="header-right">
+      <div class="date-box">
+        <label>Date</label>
+        <input type="date" id="dateInput">
+      </div>
+      <button class="btn btn-gold" onclick="saveAll()">↓ Save</button>
+      <button class="btn" onclick="loadAll()">↑ Load</button>
+      <button class="btn" onclick="clearAll()">✕ Clear</button>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <span class="summary-bar-label">Jump to:</span>
+    <div id="summaryChips"></div>
+  </div>
+
+  <div class="channel-nav" id="channelNav"></div>
+  <div id="panelContainer"></div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── DATA ── */
+const CHANNELS = [
+  { id:'JPMA',           label:'JPMA',            subtitle:'JPM Advisors',                   type:'BIO PROGRAM (pixel & pen)',       pm:'Erin',           ed:'Tracy', proof:'Katie M, ML, Lindsey', design:'Christy (Lead), Alyssa, Open', acc:'blue',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","Client Feedback / Revisions"] },
+  { id:'CWM_BLUE',       label:'CWM Blue',         subtitle:'CWM Blue Channel',               type:'BAU / DESIGN',                    pm:'TBD (J/E)',      ed:'Tracy', proof:'Katie M, ML, Lindsey', design:'Aimee, Irene, Open', strat:'Kara (contract w/ Liha)', acc:'green',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","Strategy Notes"] },
+  { id:'CWM_SELECT',     label:'CWM Select',       subtitle:'CWM Select Channel',             type:'BAU DESIGN',                      pm:'TBD (Jen/Erin)', ed:'Tracy', proof:'TBD', design:'Mackenzie, Aimee', acc:'',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","Client Feedback / Revisions"] },
+  { id:'SPECIALISTS',    label:'Specialists',      subtitle:'Specialists Channel',            type:'DESIGN',                          pm:'TBD (Jen/Erin)', ed:'Tracy', proof:'TBD', design:'Mackenzie, Aimee', acc:'red',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","Client Feedback / Revisions"] },
+  { id:'PRIVATE_BANK',   label:'Private Bank',     subtitle:'JPM Private Bank',               type:'BIO PROGRAM – PILOT / PHASE 1',   pm:'Samantha (CWOC)',ed:'Tracy', proof:'Lindsey, Kathy, ML', design:'Alyssa, Irene', acc:'blue',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","Pilot Phase Notes"] },
+  { id:'PRIVATE_CLIENT', label:'Private Client',   subtitle:'JPM Private Client',             type:'BIO PROGRAM – 54 TEAMS',          pm:'Kate M (CWOC)',  ed:'Tracy', proof:'Katie M, Lindsey', design:'Irene', tmpl:'Elizabeth', acc:'purple',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","Team Tracking Notes"] },
+  { id:'FIELD_MARKETING',label:'Field Marketing',  subtitle:'Field Marketing',                type:'APP / BAU',                       pm:'TBD',            ed:'Tracy', proof:'TBD', design:'Christy, Alyssa', tmpl:'Elizabeth, Maeve', acc:'',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Template Notes","App / BAU Notes"] },
+  { id:'CLIENT_PRODUCT', label:'Client & Product', subtitle:'Client & Product Family Wealth', type:'APP / BAU',                       pm:'TBD',            ed:'Tracy', proof:'TBD', design:'TBD', acc:'green',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","App / BAU Notes"] },
+  { id:'FAMILY_WEALTH',  label:'Family Wealth',    subtitle:'Family Wealth Channel',          type:'BAU / DESIGN',                    pm:'TBD',            ed:'Tracy', proof:'TBD', design:'TBD', acc:'green',
+    secs:["Today's Priorities","In Progress / Active Jobs","Blockers / Escalations","Design Notes","Proofing Queue","Client Notes"] }
+];
+
+const HR_SECS = [
+  { id:'hr_hiring',     label:'Hiring & Recruiting',       icon:'◈', acc:'blue'   },
+  { id:'hr_onboarding', label:'Onboarding / Offboarding',  icon:'▸', acc:'green'  },
+  { id:'hr_reviews',    label:'Reviews & Feedback',        icon:'◎', acc:'purple' },
+  { id:'hr_admin',      label:'Administrative / Ops Tasks',icon:'▣', acc:''       },
+  { id:'hr_contracts',  label:'Contracts & Legal',         icon:'≡', acc:'red'    },
+  { id:'hr_team',       label:'Team / Culture',            icon:'◉', acc:''       }
+];
+
+const SEC_ICON = {
+  "Today's Priorities":'▸',"In Progress / Active Jobs":'⟳',"Blockers / Escalations":'⚑',
+  "Design Notes":'◈',"Proofing Queue":'✓',"Client Feedback / Revisions":'↺',
+  "Strategy Notes":'◎',"Pilot Phase Notes":'◆',"Team Tracking Notes":'≡',
+  "Template Notes":'▣',"App / BAU Notes":'⊕',"Client Notes":'◉'
+};
+const SEC_ACC = {
+  "Today's Priorities":'blue',"Blockers / Escalations":'red',"Design Notes":'green',
+  "Client Feedback / Revisions":'purple',"Strategy Notes":'purple',"Pilot Phase Notes":'blue'
+};
+
+// Master pulls from these sections per channel
+const MASTER_SECS = ["Today's Priorities","Blockers / Escalations","In Progress / Active Jobs"];
+
+/* ── STATE ── */
+// items[sourceId][sectionKey] = [{id,text,done}, ...]
+let items = {};
+let chStatus = {};   // channelId -> status string
+let chPriority = {}; // channelId -> 'High'|'Med'|'Low'
+let eodNotes = {};   // sourceId -> string
+
+let activeTab = 'MASTER';
+
+/* ── BOOTSTRAP ── */
+document.getElementById('dateInput').value = todayStr();
+buildAll();
+const saved = localStorage.getItem(storageKey());
+if (saved) applyData(JSON.parse(saved));
+switchTab('MASTER');
+
+/* ── BUILD UI ── */
+function buildAll() {
+  buildSummaryBar();
+  buildTabs();
+  buildMasterPanel();
+  buildHRPanel();
+  buildChannelPanels();
+}
+
+function buildSummaryBar() {
+  const div = document.getElementById('summaryChips');
+  div.innerHTML = '';
+  const chips = [
+    { id:'MASTER', label:'★ Master' },
+    { id:'HR',     label:'HR / Admin' },
+    ...CHANNELS.map(c => ({ id:c.id, label:c.label }))
+  ];
+  chips.forEach(c => {
+    const el = mkEl('span', 'summary-chip');
+    el.id = 'chip-' + c.id;
+    el.textContent = c.label;
+    el.onclick = () => switchTab(c.id);
+    div.appendChild(el);
+  });
+}
+
+function buildTabs() {
+  const nav = document.getElementById('channelNav');
+  nav.innerHTML = '';
+  const t1 = mkEl('button','tab tab-master'); t1.dataset.ch='MASTER'; t1.textContent='★ Master To-Do'; t1.onclick=()=>switchTab('MASTER'); nav.appendChild(t1);
+  const t2 = mkEl('button','tab tab-hr');     t2.dataset.ch='HR';     t2.textContent='◈ HR / Admin';   t2.onclick=()=>switchTab('HR');     nav.appendChild(t2);
+  CHANNELS.forEach(ch => {
+    const t = mkEl('button','tab'); t.dataset.ch=ch.id; t.textContent=ch.label; t.onclick=()=>switchTab(ch.id); nav.appendChild(t);
+  });
+}
+
+/* ── MASTER PANEL ── */
+function buildMasterPanel() {
+  const pc = document.getElementById('panelContainer');
+  const p = mkEl('div','channel-panel'); p.id='panel-MASTER';
+  p.innerHTML = `
+    <div class="panel-header">
+      <div>
+        <div class="channel-title">Master To-Do List</div>
+        <div style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;">All channels + HR/Admin · priorities, blockers, and active work</div>
+      </div>
+      <button class="refresh-btn" onclick="renderMaster()">↻ Refresh</button>
+    </div>
+    <div class="master-progress">
+      <div class="progress-label"><span>Daily Progress</span><span id="masterLbl">0 / 0 tasks</span></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="masterBar"></div></div>
+    </div>
+    <div id="masterContent"></div>`;
+  pc.appendChild(p);
+}
+
+function renderMaster() {
+  const mc = document.getElementById('masterContent');
+  if (!mc) return;
+  mc.innerHTML = '';
+  let totAll=0, doneAll=0;
+
+  // HR first
+  let hrRows = [];
+  HR_SECS.forEach(sec => {
+    (getItems('HR', sec.id)||[]).forEach(it => {
+      if (it.text.trim()) hrRows.push({ it, src: sec.label, prio: null });
+    });
+  });
+  const [ht,hd] = renderMasterSection(mc,'HR / Admin','Internal Ops','purple', hrRows, chPriority['HR']||null);
+  totAll+=ht; doneAll+=hd;
+
+  // Channels
+  CHANNELS.forEach(ch => {
+    let rows = [];
+    MASTER_SECS.forEach(sec => {
+      const key = secKey(sec);
+      (getItems(ch.id, key)||[]).forEach(it => {
+        if (it.text.trim()) rows.push({ it, src: sec, prio: null });
+      });
+    });
+    const [ct,cd] = renderMasterSection(mc, ch.label, ch.subtitle, ch.acc, rows, chPriority[ch.id]||null);
+    totAll+=ct; doneAll+=cd;
+  });
+
+  const pct = totAll>0 ? Math.round(doneAll/totAll*100) : 0;
+  const bar = document.getElementById('masterBar');
+  const lbl = document.getElementById('masterLbl');
+  if (bar) bar.style.width = pct+'%';
+  if (lbl) lbl.textContent = `${doneAll} / ${totAll} tasks complete · ${pct}%`;
+}
+
+function renderMasterSection(container, name, sub, acc, rows, priority) {
+  const total = rows.length;
+  const done  = rows.filter(r=>r.it.done).length;
+
+  const wrap = mkEl('div','master-section');
+
+  const hdr = mkEl('div','master-section-hdr' + (acc?' acc-'+acc:''));
+  hdr.innerHTML = `
+    <div class="master-section-name">${name}</div>
+    <div class="master-section-sub">${sub}</div>
+    ${priority?`<div class="master-prio-badge ${priority.toLowerCase()}">${priority}</div>`:''}
+    <div class="master-section-ct"><span class="ct-done">${done}</span> / ${total} done</div>`;
+  wrap.appendChild(hdr);
+
+  const itemsWrap = mkEl('div','master-items-wrap');
+  if (total === 0) {
+    const empty = mkEl('div','master-empty');
+    empty.textContent = 'No tasks yet — add items in the ' + name + ' tab.';
+    itemsWrap.appendChild(empty);
+  } else {
+    // undone first
+    const sorted = [...rows].sort((a,b) => a.it.done - b.it.done);
+    sorted.forEach(({ it, src }) => {
+      const row = mkEl('div','master-row');
+      const cb = document.createElement('input');
+      cb.type='checkbox'; cb.checked=it.done;
+      const body = mkEl('div','master-row-body');
+      const txt  = mkEl('div','master-row-text' + (it.done?' is-done':''));
+      txt.textContent = it.text;
+      const srcEl = mkEl('div','master-row-src');
+      srcEl.textContent = src;
+      body.appendChild(txt); body.appendChild(srcEl);
+      cb.onchange = () => { it.done=cb.checked; txt.classList.toggle('is-done',cb.checked); renderMaster(); };
+      row.appendChild(cb); row.appendChild(body);
+      itemsWrap.appendChild(row);
+    });
+  }
+  wrap.appendChild(itemsWrap);
+  container.appendChild(wrap);
+  return [total, done];
+}
+
+/* ── HR PANEL ── */
+function buildHRPanel() {
+  const pc = document.getElementById('panelContainer');
+  const p = mkEl('div','channel-panel'); p.id='panel-HR';
+
+  const hdr = mkEl('div','panel-header');
+  hdr.innerHTML = `
+    <div>
+      <div class="channel-title">HR / Administrative</div>
+      <div style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;">Internal Ops · Feeds into Master To-Do</div>
+      <div class="channel-meta">
+        <span class="meta-pill pm">Lead: Jen</span>
+        <span class="meta-pill">Ops: Erin</span>
+        <span class="meta-pill">Bus. Mgr: Open</span>
+        <span class="meta-pill">Bookkeeper: Jenn S.</span>
+      </div>
+    </div>`;
+  p.appendChild(hdr);
+
+  const grid = mkEl('div','notes-grid');
+  HR_SECS.forEach(sec => {
+    const block = mkEl('div','note-block' + (sec.acc?' acc-'+sec.acc:''));
+    const lbl = mkEl('div','note-label');
+    lbl.innerHTML = `<span class="lbl-icon">${sec.icon}</span> ${sec.label}`;
+    block.appendChild(lbl);
+    appendChecklist(block, 'HR', sec.id);
+    grid.appendChild(block);
+  });
+  p.appendChild(grid);
+
+  p.appendChild(makeDivider());
+
+  const eod = mkEl('div','note-block');
+  eod.innerHTML = `<div class="note-label"><span class="lbl-icon">☰</span> HR Notes / EOD</div>`;
+  const ta = document.createElement('textarea');
+  ta.id='HR_eod'; ta.placeholder='Open loops, follow-ups, reminders...';
+  ta.oninput=()=>{ eodNotes['HR']=ta.value; refreshChip('HR'); };
+  eod.appendChild(ta);
+  p.appendChild(eod);
+
+  document.getElementById('panelContainer').appendChild(p);
+}
+
+/* ── CHANNEL PANELS ── */
+function buildChannelPanels() {
+  const pc = document.getElementById('panelContainer');
+  CHANNELS.forEach(ch => {
+    const p = mkEl('div','channel-panel'); p.id='panel-'+ch.id;
+
+    let metaHTML = `<span class="meta-pill pm">PM: ${ch.pm}</span><span class="meta-pill ed">Editorial: ${ch.ed}</span><span class="meta-pill gd">Design: ${ch.design}</span>`;
+    if (ch.proof) metaHTML += `<span class="meta-pill">Proofing: ${ch.proof}</span>`;
+    if (ch.tmpl)  metaHTML += `<span class="meta-pill">Templates: ${ch.tmpl}</span>`;
+    if (ch.strat) metaHTML += `<span class="meta-pill">Strategy: ${ch.strat}</span>`;
+
+    const hdr = mkEl('div','panel-header');
+    hdr.innerHTML = `
+      <div>
+        <div class="channel-title">${ch.subtitle}</div>
+        <div style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;">${ch.type}</div>
+        <div class="channel-meta">${metaHTML}</div>
+      </div>
+      <div>
+        <div class="status-row">
+          <span class="status-label">Status:</span>
+          <select class="status-select" id="${ch.id}_status" onchange="chStatus['${ch.id}']=this.value">
+            <option>On Track</option><option>Needs Attention</option><option>Blocked</option><option>Completed</option><option>On Hold</option>
+          </select>
+        </div>
+        <div class="priority-row">
+          <span class="status-label">Priority:</span>
+          <button class="priority-btn" id="pb_${ch.id}_High" onclick="setPrio('${ch.id}','High',this)">High</button>
+          <button class="priority-btn" id="pb_${ch.id}_Med"  onclick="setPrio('${ch.id}','Med',this)">Med</button>
+          <button class="priority-btn" id="pb_${ch.id}_Low"  onclick="setPrio('${ch.id}','Low',this)">Low</button>
+        </div>
+      </div>`;
+    p.appendChild(hdr);
+
+    const grid = mkEl('div','notes-grid');
+    ch.secs.forEach(sec => {
+      const acc = SEC_ACC[sec]||'';
+      const block = mkEl('div','note-block'+(acc?' acc-'+acc:''));
+      const lbl = mkEl('div','note-label');
+      lbl.innerHTML = `<span class="lbl-icon">${SEC_ICON[sec]||'•'}</span> ${sec}`;
+      block.appendChild(lbl);
+      appendChecklist(block, ch.id, secKey(sec));
+      grid.appendChild(block);
+    });
+    p.appendChild(grid);
+    p.appendChild(makeDivider());
+
+    const eodBlock = mkEl('div','note-block');
+    eodBlock.style.marginBottom='0';
+    eodBlock.innerHTML='<div class="note-label"><span class="lbl-icon">☰</span> EOD Summary / Open Loops</div>';
+    const ta = document.createElement('textarea');
+    ta.id=ch.id+'_eod'; ta.placeholder='End of day notes, handoff, open loops...';
+    ta.oninput=()=>{ eodNotes[ch.id]=ta.value; refreshChip(ch.id); };
+    eodBlock.appendChild(ta);
+    p.appendChild(eodBlock);
+
+    pc.appendChild(p);
+  });
+}
+
+/* ── CHECKLIST ENGINE ── */
+function appendChecklist(container, sourceId, sectionKey) {
+  const ul = mkEl('ul','checklist'); ul.id=`cl_${sourceId}_${sectionKey}`;
+  container.appendChild(ul);
+  const addRow = mkEl('div','add-item-row');
+  const addBtn = mkEl('button','add-item-btn');
+  addBtn.innerHTML='+ add item';
+  addBtn.onclick=()=>addItem(sourceId,sectionKey,'');
+  addRow.appendChild(addBtn);
+  container.appendChild(addRow);
+  renderCL(sourceId, sectionKey);
+}
+
+function renderCL(sourceId, sectionKey) {
+  const ul = document.getElementById(`cl_${sourceId}_${sectionKey}`);
+  if (!ul) return;
+  ul.innerHTML='';
+  (getItems(sourceId,sectionKey)||[]).forEach(it => ul.appendChild(makeItemEl(sourceId,sectionKey,it)));
+}
+
+function makeItemEl(sourceId, sectionKey, it) {
+  const li = mkEl('li','checklist-item'+(it.done?' is-done':''));
+  li.dataset.id=it.id;
+  const cb = document.createElement('input'); cb.type='checkbox'; cb.checked=it.done;
+  const ta = document.createElement('textarea'); ta.className='item-text'; ta.rows=1; ta.value=it.text; ta.placeholder='New task...';
+  const del = mkEl('button','del-item-btn'); del.innerHTML='✕'; del.title='Remove';
+
+  cb.onchange = ()=>{ it.done=cb.checked; li.classList.toggle('is-done',cb.checked); renderMasterIfActive(); };
+  ta.oninput  = ()=>{ autoH(ta); it.text=ta.value; refreshChip(sourceId); renderMasterIfActive(); };
+  ta.onkeydown= (e)=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addItem(sourceId,sectionKey,'');} };
+  del.onclick = ()=>removeItem(sourceId,sectionKey,it.id);
+
+  li.appendChild(cb); li.appendChild(ta); li.appendChild(del);
+  setTimeout(()=>autoH(ta),0);
+  return li;
+}
+
+function addItem(sid,sk,text){
+  getItems(sid,sk).push({id:uid(),text,done:false});
+  renderCL(sid,sk);
+  refreshChip(sid);
+  renderMasterIfActive();
+  // focus last
+  const ul=document.getElementById(`cl_${sid}_${sk}`);
+  if(ul){ const tas=ul.querySelectorAll('textarea'); if(tas.length) tas[tas.length-1].focus(); }
+}
+
+function removeItem(sid,sk,itemId){
+  const arr=getItems(sid,sk); const i=arr.findIndex(x=>x.id===itemId); if(i>-1)arr.splice(i,1);
+  renderCL(sid,sk); refreshChip(sid); renderMasterIfActive();
+}
+
+function getItems(sid,sk){
+  if(!items[sid]) items[sid]={};
+  if(!items[sid][sk]) items[sid][sk]=[];
+  return items[sid][sk];
+}
+
+/* ── HELPERS ── */
+function mkEl(tag,cls){ const e=document.createElement(tag); e.className=cls; return e; }
+function makeDivider(){ const hr=document.createElement('hr'); hr.className='section-divider'; return hr; }
+function autoH(ta){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; }
+function secKey(sec){ return sec.replace(/[^a-zA-Z0-9]/g,'_'); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function storageKey(){ return 'jpc_v3_'+(document.getElementById('dateInput').value||todayStr()); }
+function renderMasterIfActive(){ if(activeTab==='MASTER') renderMaster(); }
+
+function switchTab(id){
+  activeTab=id;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.ch===id));
+  document.querySelectorAll('.channel-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+id));
+  if(id==='MASTER') renderMaster();
+}
+
+function refreshChip(sid){
+  const chip=document.getElementById('chip-'+sid); if(!chip) return;
+  let has=false;
+  if(items[sid]) Object.values(items[sid]).forEach(arr=>{ if(arr.length) has=true; });
+  if(eodNotes[sid]&&eodNotes[sid].trim()) has=true;
+  chip.classList.toggle('has-items',has);
+}
+
+function setPrio(chId, level, btn){
+  chPriority[chId]=level;
+  ['High','Med','Low'].forEach(l=>{
+    const b=document.getElementById(`pb_${chId}_${l}`);
+    if(b){ b.className='priority-btn'; if(l===level) b.classList.add(`sel-${l.toLowerCase()}`); }
+  });
+  renderMasterIfActive();
+}
+
+/* ── SAVE / LOAD / CLEAR ── */
+function saveAll(){
+  const data = {
+    items: JSON.parse(JSON.stringify(items)),
+    chStatus: {...chStatus},
+    chPriority: {...chPriority},
+    eodNotes: {...eodNotes}
+  };
+  localStorage.setItem(storageKey(), JSON.stringify(data));
+  showToast('Saved ✓');
+}
+
+function loadAll(){
+  const raw=localStorage.getItem(storageKey());
+  if(!raw){ showToast('No saved notes for this date'); return; }
+  applyData(JSON.parse(raw));
+  showToast('Loaded ✓');
+}
+
+function applyData(data){
+  if(data.items){
+    items=data.items;
+    CHANNELS.forEach(ch=>{
+      ch.secs.forEach(sec=>renderCL(ch.id,secKey(sec)));
+      refreshChip(ch.id);
+    });
+    HR_SECS.forEach(sec=>renderCL('HR',sec.id));
+    refreshChip('HR');
+  }
+  if(data.chStatus){
+    chStatus=data.chStatus;
+    CHANNELS.forEach(ch=>{ const el=document.getElementById(ch.id+'_status'); if(el&&chStatus[ch.id]) el.value=chStatus[ch.id]; });
+  }
+  if(data.chPriority){
+    chPriority=data.chPriority;
+    CHANNELS.forEach(ch=>{ if(chPriority[ch.id]) setPrio(ch.id,chPriority[ch.id],document.getElementById(`pb_${ch.id}_${chPriority[ch.id]}`)||{}); });
+  }
+  if(data.eodNotes){
+    eodNotes=data.eodNotes;
+    CHANNELS.forEach(ch=>{ const el=document.getElementById(ch.id+'_eod'); if(el&&eodNotes[ch.id]!==undefined) el.value=eodNotes[ch.id]; });
+    const hrEod=document.getElementById('HR_eod'); if(hrEod&&eodNotes['HR']!==undefined) hrEod.value=eodNotes['HR'];
+  }
+  renderMaster();
+}
+
+function clearAll(){
+  if(!confirm('Clear all notes for this date?')) return;
+  items={}; chStatus={}; chPriority={}; eodNotes={};
+  CHANNELS.forEach(ch=>{
+    ch.secs.forEach(sec=>renderCL(ch.id,secKey(sec)));
+    const eod=document.getElementById(ch.id+'_eod'); if(eod) eod.value='';
+    const st=document.getElementById(ch.id+'_status'); if(st) st.selectedIndex=0;
+    ['High','Med','Low'].forEach(l=>{ const b=document.getElementById(`pb_${ch.id}_${l}`); if(b) b.className='priority-btn'; });
+    refreshChip(ch.id);
+  });
+  HR_SECS.forEach(sec=>renderCL('HR',sec.id));
+  const hrEod=document.getElementById('HR_eod'); if(hrEod) hrEod.value='';
+  refreshChip('HR');
+  renderMaster();
+  showToast('Cleared');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+document.getElementById('dateInput').addEventListener('change', ()=>{
+  items={}; chStatus={}; chPriority={}; eodNotes={};
+  CHANNELS.forEach(ch=>{ ch.secs.forEach(sec=>renderCL(ch.id,secKey(sec))); });
+  HR_SECS.forEach(sec=>renderCL('HR',sec.id));
+  const raw=localStorage.getItem(storageKey()); if(raw) applyData(JSON.parse(raw)); else renderMaster();
+});
+</script>
+</body>
+</html>
